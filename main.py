@@ -1,6 +1,10 @@
-from telegram.ext import Updater, MessageHandler, Filters, CommandHandler
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from random import choice
+import aiocron
+import asyncio
+
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram.ext import Updater, MessageHandler, Filters, CommandHandler
+
 from sel import sel
 
 state = 0
@@ -22,6 +26,7 @@ def main():
     dp.add_handler(CommandHandler('choose_group', choose_group))
     dp.add_handler(CommandHandler('close', close_keyboard))
     dp.add_handler(MessageHandler(Filters.text, text))
+    asyncio.get_event_loop().run_forever()
     updater.start_polling()
     updater.idle()
 
@@ -31,11 +36,22 @@ def start(update, context):
 напиши /help''', reply_markup=markup)
 
 
+@aiocron.crontab('* * * * *')
+async def attime():
+    update.message.reply_text('gdhdfd')
+
+
 def text(update, context):
-    global state, markup, time_keyboard
+    global state, markup, time_keyboard, update1, context1
+    days = {'вторник': 'tuesday', 'среда': 'wednesday', 'четверг': 'thursday', 'пятница': 'friday', 'суббота': \
+        'saturday', 'воскресенье': 'sunday'}
     if state == 1 and update.message.text in ('Замира', 'Расима', 'Ильмир', 'Римма'):
         return choose_teacher(update, context)
     elif state == 2 and [update.message.text] in time_keyboard:
+        day, time = update.message.text.split()
+        update1 = update
+        context1 = context
+
         update.message.reply_text('''Напоминание установлено''', reply_markup=markup)
 
 
@@ -73,8 +89,7 @@ def choose_teacher(update, context):
     state = 2
 
 
-
-
-
 if __name__ == '__main__':
     main()
+
+
