@@ -1,7 +1,5 @@
 from random import choice
-import aiocron
-import asyncio
-
+from sec import sec
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, MessageHandler, Filters, CommandHandler
 
@@ -26,32 +24,43 @@ def main():
     dp.add_handler(CommandHandler('choose_group', choose_group))
     dp.add_handler(CommandHandler('close', close_keyboard))
     dp.add_handler(MessageHandler(Filters.text, text))
-    asyncio.get_event_loop().run_forever()
     updater.start_polling()
     updater.idle()
 
 
 def start(update, context):
+    send_photo(update, context)
     update.message.reply_text('''Привет! Это бот школы татарского языка SkyTat. Чтобы узнать больще о нас, \
 напиши /help''', reply_markup=markup)
 
 
-@aiocron.crontab('* * * * *')
-async def attime():
-    update.message.reply_text('gdhdfd')
+def task(context):
+    job = context.job
+    context.bot.send_message(job.context, text='Занятие начнётся через 5 мин!')
+
+
+def set_timer(update, context, day, time):
+    time = f'{time.split(":")[0]}:{int(time.split(":")[1]) - 5}'
+    d = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота']
+    chat_id = update.message.chat_id
+    due = sec(str(d.index(day)), time)
+    print((d.index(day), time))
+    context.job_queue.run_once(task, due, context=chat_id, name=str(chat_id))
+    text = f'Вернусь через {due} секунд!'
+    update.message.reply_text(text)
+
+
+def send_photo(update, context):
+    context.bot.send_photo(chat_id=update.message.chat.id, photo=open('tat.jpeg', 'rb'))
 
 
 def text(update, context):
-    global state, markup, time_keyboard, update1, context1
-    days = {'вторник': 'tuesday', 'среда': 'wednesday', 'четверг': 'thursday', 'пятница': 'friday', 'суббота': \
-        'saturday', 'воскресенье': 'sunday'}
+    global state, markup
     if state == 1 and update.message.text in ('Замира', 'Расима', 'Ильмир', 'Римма'):
         return choose_teacher(update, context)
     elif state == 2 and [update.message.text] in time_keyboard:
         day, time = update.message.text.split()
-        update1 = update
-        context1 = context
-
+        set_timer(update, context, day, '21:39')
         update.message.reply_text('''Напоминание установлено''', reply_markup=markup)
 
 
