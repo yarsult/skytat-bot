@@ -1,5 +1,6 @@
 import sqlite3
 
+
 def base():
     conn = sqlite3.connect('timetable_skytat.db')
     cur = conn.cursor()
@@ -22,4 +23,6 @@ def base():
     cur.executemany("INSERT INTO timetable VALUES(?, ?, ?, ?, ?);", more)
     conn.commit()
 
-base()
+
+if __name__ == '__main__':
+    base()
