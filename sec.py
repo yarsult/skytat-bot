@@ -3,6 +3,9 @@ import datetime
 
 def sec(dayx, time):
     hour, mins = map(int, time.split(':'))
+    if mins < 0:
+        hour -= 1
+        mins = 55
     today = datetime.datetime.now()
     date, month, year = map(int, today.strftime('%d %m %Y').split())
     if dayx == today.strftime('%w') and today > datetime.datetime(year, month, date, hour=hour,

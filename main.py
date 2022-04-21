@@ -1,12 +1,12 @@
 from random import choice
 from sec import sec
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import Updater, MessageHandler, Filters, CommandHandler
-
 from sel import sel
+from weather import code_location, weather
 
 state = 0
-reply_keyboard = [['/info', '/choose_group'], ['/info', '/random_word'], ['/close']]
+reply_keyboard = [['Инфо', 'Выбрать группу'], ['Погода в Казани', 'Случайное слово'], ['Закрыть клавиатуру']]
 markup = ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=False)
 
 
@@ -15,14 +15,10 @@ def close_keyboard(update, context):
 
 
 def main():
-    updater = Updater('5103166103:AAGynbQFRHdzd1VXrM6DRErTTAPkjl6uojk', use_context=True)
+    updater = Updater('5331419578:AAGQUFsR7poil4NHuE34xAvQH9RQCoXIbU0', use_context=True)
     dp = updater.dispatcher
     dp.add_handler(CommandHandler('start', start))
     dp.add_handler(CommandHandler('help', help))
-    dp.add_handler(CommandHandler('info', info))
-    dp.add_handler(CommandHandler('random_word', word_of_the_day))
-    dp.add_handler(CommandHandler('choose_group', choose_group))
-    dp.add_handler(CommandHandler('close', close_keyboard))
     dp.add_handler(MessageHandler(Filters.text, text))
     updater.start_polling()
     updater.idle()
@@ -30,8 +26,14 @@ def main():
 
 def start(update, context):
     send_photo(update, context)
-    update.message.reply_text('''Привет! Это бот школы татарского языка SkyTat. Чтобы узнать больще о нас, \
-напиши /help''', reply_markup=markup)
+    update.message.reply_text('''Сәлам! Это бот школы татарского языка SkyTat. Чтобы узнать больше о нас, \
+напиши "Инфо"''', reply_markup=markup)
+
+
+def kazweather(update, context):
+    cod_loc = code_location('55.797444', '49.104329', 'wbRhTtLzL4Mt6mZtmqFikOuUbjvCx3tK')
+    w = weather(cod_loc, 'wbRhTtLzL4Mt6mZtmqFikOuUbjvCx3tK')['сейчас']
+    update.message.reply_text(f"Температура: {w['temp']}. {w['sky']}")
 
 
 def task(context):
@@ -44,23 +46,30 @@ def set_timer(update, context, day, time):
     d = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота']
     chat_id = update.message.chat_id
     due = sec(str(d.index(day)), time)
-    print((d.index(day), time))
     context.job_queue.run_once(task, due, context=chat_id, name=str(chat_id))
-    text = f'Вернусь через {due} секунд!'
-    update.message.reply_text(text)
 
 
 def send_photo(update, context):
-    context.bot.send_photo(chat_id=update.message.chat.id, photo=open('tat.jpeg', 'rb'))
+    context.bot.send_photo(chat_id=update.message.chat.id, photo=open('tat.png', 'rb'))
 
 
 def text(update, context):
     global state, markup
+    if update.message.text == 'Погода в Казани':
+        kazweather(update, context)
+    elif update.message.text == 'Инфо':
+        info(update, context)
+    elif update.message.text == 'Выбрать группу':
+        choose_group(update, context)
+    elif update.message.text == 'Случайное слово':
+        word_of_the_day(update, context)
+    elif update.message.text == 'Закрыть клавиатуру':
+        close_keyboard(update, context)
     if state == 1 and update.message.text in ('Замира', 'Расима', 'Ильмир', 'Римма'):
         return choose_teacher(update, context)
     elif state == 2 and [update.message.text] in time_keyboard:
         day, time = update.message.text.split()
-        set_timer(update, context, day, '21:39')
+        set_timer(update, context, day, time)
         update.message.reply_text('''Напоминание установлено''', reply_markup=markup)
 
 
@@ -69,9 +78,14 @@ def help(update, context):
 
 
 def info(update, context):
-    update.message.reply_text('''Наш сайт: https://skytat.ru/\n
-Telegram-канал https://t.me/skytat\n
-Вконтакте https://vk.com/skytat''')
+    update.message.reply_text(
+        'Наши контакты',
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton(text='Сайт', url='https://skytat.ru')],
+            [InlineKeyboardButton(text='Telegram', url='https://t.me/skytat')],
+            [InlineKeyboardButton(text='Вконтакте', url='https://vk.com/skytat')],
+            ])
+        )
 
 
 def word_of_the_day(update, context):
@@ -100,5 +114,4 @@ def choose_teacher(update, context):
 
 if __name__ == '__main__':
     main()
-
 
