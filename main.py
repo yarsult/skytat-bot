@@ -25,7 +25,7 @@ def main():
 
 def start(update, context):
     send_photo(update, context)
-    update.message.reply_text('''Сәлам! Это бот школы татарского языка SkyTat. Чтобы узнать больше о нас, \
+    update.message.reply_text('''Сәлам! Это бот разговорного клуба SkyTat. Чтобы узнать больше о нас, \
 напиши "Инфо"''', reply_markup=markup)
 
 
@@ -40,12 +40,35 @@ def task(context):
     context.bot.send_message(job.context, text='Занятие начнётся через 5 мин!')
 
 
+def task1(context):
+    job = context.job
+    context.bot.send_message(job.context, text='Не забудьте, сегодня вечером у вас занятие.')
+
+
+def days(update, context, sec):
+    sec += 300
+    a = [0, 0, 0]
+    day = sec
+    while day > 0:
+        day //= 86400
+        a[0] += 1
+    sec = sec % 86400
+    a[1] = sec // 3600
+    sec %= 3600
+    a[2] = sec // 60
+    sec %= 60
+    update.message.reply_text(f"Занятие начнётся через {a[0]} дн {a[1]} ч {a[2]} мин {sec} сек")
+
+
 def set_timer(update, context, day, time):
     time = f'{time.split(":")[0]}:{int(time.split(":")[1]) - 5}'
     d = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота']
     chat_id = update.message.chat_id
     due = sec(str(d.index(day)), time)
+    days(update, context, due)
+    due2 = sec(str(d.index(day)), '10:00')
     context.job_queue.run_once(task, due, context=chat_id, name=str(chat_id))
+    context.job_queue.run_once(task1, due2, context=chat_id, name=str(chat_id))
 
 
 def send_photo(update, context):
