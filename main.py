@@ -15,7 +15,7 @@ def close_keyboard(update, context):
 
 
 def main():
-    updater = Updater('5331419578:AAGQUFsR7poil4NHuE34xAvQH9RQCoXIbU0', use_context=True)
+    updater = Updater('88005553535', use_context=True)
     dp = updater.dispatcher
     dp.add_handler(CommandHandler('start', start))
     dp.add_handler(MessageHandler(Filters.text, text))
